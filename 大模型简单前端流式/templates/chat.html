@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!-- HTML5文档类型声明 -->
+    <meta charset="UTF-8">
+    <!-- 设置字符编码为UTF-8，支持中文显示 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 响应式设计配置：适配移动设备，初始缩放比例1:1 -->
+    <title>AI对话助手 - 流式传输</title>
+    <!-- 页面标题，显示在浏览器标签页 -->
+
+    <style>
+        /* ===== 全局样式配置 ===== */
+        body {
+            font-family: Arial, sans-serif;    /* 设置无衬线字体，提高可读性 */
+            max-width: 800px;                  /* 限制最大宽度，避免在大屏幕上过于宽泛 */
+            margin: 50px auto;                 /* 上下边距50px，左右自动居中 */
+            padding: 20px;                     /* 内边距20px，给内容留出呼吸空间 */
+            background-color: #f5f5f5;         /* 浅灰色背景，柔和不刺眼 */
+        }
+
+        /* ===== 主容器样式 ===== */
+        .container {
+            background: white;                  /* 白色背景，与页面背景形成对比 */
+            padding: 30px;                     /* 内边距30px，内容不贴边 */
+            border-radius: 10px;               /* 圆角边框，现代化设计 */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);  /* 阴影效果，增加立体感 */
+        }
+
+        /* ===== 标题样式 ===== */
+        h1 {
+            color: #333;                       /* 深灰色文字，不会过于突兀 */
+            text-align: center;                /* 文字居中对齐 */
+            margin-bottom: 30px;               /* 下边距30px，与下方内容分离 */
+        }
+
+        /* ===== 聊天框样式 ===== */
+        .chat-box {
+            height: 500px;                     /* 固定高度500px，确保界面稳定 */
+            overflow-y: auto;                  /* 垂直滚动，内容超出时显示滚动条 */
+            border: 1px solid #ddd;            /* 浅灰色边框，划分区域 */
+            padding: 15px;                     /* 内边距15px，内容不贴边 */
+            margin-bottom: 20px;               /* 下边距20px，与输入区域分离 */
+            background-color: #fafafa;         /* 极浅灰背景，区别于主容器 */
+            border-radius: 5px;                /* 小圆角，保持一致性 */
+        }
+
+        /* ===== 消息通用样式 ===== */
+        .message {
+            margin-bottom: 15px;               /* 消息间距15px，清晰分离 */
+            padding: 10px;                     /* 内边距10px，文字不贴边 */
+            border-radius: 8px;                /* 圆角设计，现代化外观 */
+        }
+
+        /* ===== 用户消息样式 ===== */
+        .user-message {
+            background-color: #007bff;         /* 蓝色背景，表示用户消息 */
+            color: white;                      /* 白色文字，与背景形成对比 */
+            text-align: right;                 /* 右对齐，符合聊天应用习惯 */
+            margin-left: 20%;                  /* 左边距20%，创造气泡效果 */
+        }
+
+        /* ===== AI消息样式 ===== */
+        .ai-message {
+            background-color: #e9ecef;         /* 浅灰色背景，表示AI消息 */
+            color: #333;                       /* 深灰色文字，易于阅读 */
+            margin-right: 20%;                 /* 右边距20%，与用户消息区分 */
+        }
+
+        /* ===== 流式传输消息样式 ===== */
+        .streaming-message {
+            background-color: #f8f9fa;         /* 极浅灰背景，表示正在接收 */
+            border: 2px solid #28a745;         /* 绿色边框，表示活跃状态 */
+            border-radius: 8px;                /* 圆角设计 */
+            margin-right: 20%;                 /* 右边距20%，与AI消息一致 */
+        }
+
+        /* ===== 输入组样式 ===== */
+        .input-group {
+            display: flex;                     /* 弹性布局，水平排列 */
+            gap: 10px;                         /* 元素间距10px */
+        }
+
+        /* ===== 输入框样式 ===== */
+        #messageInput {
+            flex: 1;                          /* 占据剩余空间 */
+            padding: 12px;                    /* 内边距12px，增加点击区域 */
+            border: 1px solid #ddd;           /* 浅灰色边框 */
+            border-radius: 5px;               /* 小圆角 */
+            font-size: 16px;                  /* 16px字体，避免移动端缩放 */
+        }
+
+        /* ===== 按钮样式 ===== */
+        button {
+            padding: 12px 24px;               /* 内边距：上下12px，左右24px */
+            background-color: #28a745;        /* 绿色背景，表示积极操作 */
+            color: white;                      /* 白色文字 */
+            border: none;                      /* 移除默认边框 */
+            border-radius: 5px;                /* 圆角设计 */
+            cursor: pointer;                   /* 鼠标指针样式 */
+            font-size: 16px;                  /* 与输入框字体大小一致 */
+        }
+
+        /* ===== 按钮悬停效果 ===== */
+        button:hover {
+            opacity: 0.8;                     /* 悬停时透明度降低，提供视觉反馈 */
+        }
+
+        /* ===== 按钮禁用样式 ===== */
+        button:disabled {
+            background-color: #6c757d;        /* 灰色背景，表示不可用 */
+            cursor: not-allowed;               /* 禁止图标，明确状态 */
+        }
+
+        /* ===== 打字指示器样式 ===== */
+        .typing-indicator {
+            display: inline-block;             /* 行内块元素 */
+            position: relative;                /* 相对定位，为伪元素定位 */
+        }
+
+        /* ===== 打字指示器动画 ===== */
+        .typing-indicator::after {
+            content: '|';                      /* 显示竖线符号 */
+            animation: blink 1s infinite;      /* 闪烁动画，1秒周期，无限循环 */
+        }
+
+        /* ===== 闪烁动画定义 ===== */
+        @keyframes blink {
+            0%, 50% { opacity: 1; }           /* 前50%时间完全显示 */
+            51%, 100% { opacity: 0; }         /* 后50%时间完全隐藏 */
+        }
+
+        /* ===== 状态指示器样式 ===== */
+        .status-indicator {
+            display: inline-block;             /* 行内块元素 */
+            width: 8px;                        /* 宽度8px */
+            height: 8px;                       /* 高度8px，形成圆形 */
+            background-color: #28a745;         /* 绿色背景，表示在线状态 */
+            border-radius: 50%;                /* 50%圆角，形成圆形 */
+            margin-right: 5px;                 /* 右边距5px，与文字分离 */
+            animation: pulse 2s infinite;      /* 脉冲动画，2秒周期 */
+        }
+
+        /* ===== 脉冲动画定义 ===== */
+        @keyframes pulse {
+            0% { opacity: 1; }                /* 开始时完全显示 */
+            50% { opacity: 0.5; }             /* 中间时半透明 */
+            100% { opacity: 1; }              /* 结束时完全显示 */
+        }
+
+        /* ===== 流式信息样式 ===== */
+        .stream-info {
+            font-size: 12px;                  /* 小字体，不干扰主要内容 */
+            color: #666;                       /* 中灰色，降低视觉权重 */
+            margin-top: 5px;                   /* 上边距5px，与主要内容分离 */
+            font-style: italic;                /* 斜体，表示辅助信息 */
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== 主容器 ===== -->
+    <div class="container">
+        <!-- ===== 页面标题 ===== -->
+        <h1>
+            <span class="status-indicator"></span>
+            <!-- 状态指示器：绿色圆点表示系统在线 -->
+            🤖 AI对话助手 - 流式传输
+        </h1>
+
+        <!-- ===== 聊天显示区域 ===== -->
+        <div id="chatBox" class="chat-box">
+            <!-- 初始欢迎消息 -->
+            <div class="message ai-message">
+                <strong>AI:</strong> 你好！我是一个AI对话助手，现在采用流式传输模式，可以实时显示回复内容。有什么可以帮助你的吗？
+            </div>
+        </div>
+
+        <!-- ===== 输入区域 ===== -->
+        <div class="input-group">
+            <!-- 消息输入框 -->
+            <input type="text" id="messageInput" placeholder="输入你的消息..." onkeypress="handleKeyPress(event)">
+            <!-- 发送按钮 -->
+            <button id="sendBtn" onclick="sendMessage()">🌊 发送消息</button>
+        </div>
+    </div>
+
+    <script>
+        /* ===== 全局状态变量 ===== */
+        let isProcessing = false;              // 是否正在处理请求的标志
+        let currentStreamingMessage = null;    // 当前正在流式接收的消息元素引用
+
+        /**
+         * 键盘事件处理函数
+         * 功能：监听回车键，触发消息发送
+         *
+         * @param {KeyboardEvent} event - 键盘事件对象
+         */
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();  // 回车键发送消息，提升用户体验
+            }
+        }
+
+        /**
+         * 发送流式消息的核心函数
+         * 功能：
+         * 1. 验证输入和状态
+         * 2. 显示用户消息
+         * 3. 发起流式HTTP请求
+         * 4. 处理响应数据流
+         * 5. 更新UI状态
+         */
+        function sendMessage() {
+            // ===== 第1步：状态检查和输入验证 =====
+            if (isProcessing) return;  // 防止重复提交，避免并发问题
+
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();  // 获取输入内容并去除首尾空白
+            if (!message) return;  // 空消息直接返回，不发送请求
+
+            // ===== 第2步：设置处理状态 =====
+            isProcessing = true;  // 标记为处理中，阻止新的请求
+            console.log('🌊 发送流式对话:', message);  // 调试日志
+
+            // ===== 第3步：UI更新操作 =====
+            addMessage('user', message);  // 显示用户消息
+            messageInput.value = '';       // 清空输入框
+            setButtonDisabled(true);       // 禁用发送按钮
+            currentStreamingMessage = addStreamingMessage();  // 创建流式消息容器
+
+            // ===== 第4步：发起流式HTTP请求 =====
+            fetch('/stream_chat', {
+                method: 'POST',  // 使用POST方法
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',  // 表单格式
+                },
+                body: `message=${encodeURIComponent(message)}`  // URL编码防止特殊字符问题
+            })
+            .then(response => {
+                console.log('🌊 开始接收流式数据');
+
+                // ===== 第5步：获取流式读取器 =====
+                const reader = response.body.getReader();  // 获取ReadableStream读取器
+                const decoder = new TextDecoder();         // 创建文本解码器
+
+                /**
+                 * 递归读取流数据的内部函数
+                 * 功能：持续读取数据块直到流结束
+                 *
+                 * 流读取原理：
+                 * 1. reader.read()返回Promise<{done: boolean, value: Uint8Array}>
+                 * 2. done=true表示流结束，value包含数据块
+                 * 3. 需要用TextDecoder将字节数组转换为字符串
+                 * 4. 递归调用实现持续读取
+                 */
+                function readStream() {
+                    return reader.read().then(({ done, value }) => {
+                        if (done) {
+                            // 流结束处理
+                            console.log('🌊 流式传输完成');
+                            finishStreaming();  // 清理状态和UI
+                            return;
+                        }
+
+                        // ===== 第6步：解码和解析数据 =====
+                        const chunk = decoder.decode(value, { stream: true });
+                        // stream: true 表示这是流式解码，可能有不完整的字符
+                        console.log('🔍 收到数据块:', chunk);
+
+                        // ===== 第7步：解析SSE数据格式 =====
+                        /**
+                         * SSE数据格式解析：
+                         * - 每行以"data: "开头
+                         * - 可能包含多行数据
+                         * - 消息之间用空行分隔
+                         * - 需要逐行解析JSON数据
+                         */
+                        const lines = chunk.split('\n');  // 按行分割
+                        for (const line of lines) {
+                            if (line.trim() && line.startsWith('data: ')) {
+                                try {
+                                    const jsonStr = line.substring(6);  // 移除"data: "前缀
+                                    const data = JSON.parse(jsonStr);   // 解析JSON数据
+                                    handleStreamData(data);              // 处理解析后的数据
+                                } catch (e) {
+                                    console.error('解析JSON错误:', e, line);
+                                    // 记录但不中断处理，提高容错性
+                                }
+                            }
+                        }
+
+                        return readStream();  // 递归调用，继续读取下一个数据块
+                    });
+                }
+
+                return readStream();  // 开始读取流数据
+            })
+            .catch(error => {
+                // ===== 错误处理 =====
+                console.error('❌ 流式对话错误:', error);
+                if (currentStreamingMessage) {
+                    updateStreamingMessage('网络错误，请稍后重试');
+                }
+                finishStreaming();  // 确保状态重置
+            });
+        }
+
+        /**
+         * 处理流式数据的核心函数
+         * 功能：根据数据类型执行不同的处理逻辑
+         *
+         * @param {Object} data - 解析后的JSON数据对象
+         * 数据格式：{type: string, content: string, ...}
+         */
+        function handleStreamData(data) {
+            console.log('🔍 处理流式数据:', data);
+
+            // ===== 根据消息类型分发处理 =====
+            switch (data.type) {
+                case 'start':
+                    // 流式传输开始
+                    console.log('🌊 流式开始');
+                    updateStreamingMessage('<span class="typing-indicator"></span>');
+                    // 显示打字指示器，给用户视觉反馈
+                    break;
+
+                case 'chunk':
+                    // 接收内容块
+                    if (data.content) {
+                        appendToStreamingMessage(data.content);
+                        // 将新内容追加到现有内容后面
+                    }
+                    break;
+
+                case 'end':
+                    // 流式传输结束
+                    console.log('🌊 流式结束');
+                    finishStreaming();
+                    // 完成流式传输，重置状态
+                    break;
+
+                case 'error':
+                    // 服务器错误
+                    console.error('❌ 流式错误:', data.content);
+                    updateStreamingMessage(data.content);
+                    finishStreaming();
+                    break;
+
+                default:
+                    console.warn('未知的数据类型:', data.type);
+            }
+        }
+
+        /**
+         * 添加消息到聊天框
+         * 功能：创建消息DOM元素并添加到聊天区域
+         *
+         * @param {string} sender - 发送者类型：'user' 或 'ai'
+         * @param {string} message - 消息内容
+         * @returns {HTMLElement} 创建的消息元素
+         */
+        function addMessage(sender, message) {
+            const chatBox = document.getElementById('chatBox');
+            const messageDiv = document.createElement('div');
+
+            // ===== 设置消息样式 =====
+            messageDiv.className = `message ${sender === 'user' ? 'user-message' : 'ai-message'}`;
+
+            // ===== 设置消息内容 =====
+            const prefix = sender === 'user' ? '你:' : 'AI:';
+            messageDiv.innerHTML = `<strong>${prefix}</strong> ${message}`;
+
+            // ===== 添加到聊天框并滚动 =====
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;  // 自动滚动到底部
+
+            return messageDiv;
+        }
+
+        /**
+         * 添加流式消息容器
+         * 功能：创建专门用于流式接收的消息容器
+         *
+         * @returns {HTMLElement} 流式消息容器元素
+         */
+        function addStreamingMessage() {
+            const chatBox = document.getElementById('chatBox');
+            const messageDiv = document.createElement('div');
+            const uniqueId = 'streaming-' + Date.now();  // 生成唯一ID
+
+            // ===== 设置流式消息样式和结构 =====
+            messageDiv.className = 'message streaming-message';
+            messageDiv.id = 'currentStreamingMessage';
+            messageDiv.innerHTML = `
+                <strong>AI:</strong>
+                <span id="${uniqueId}">准备接收...</span>
+                <div class="stream-info">流式传输中...</div>
+            `;
+
+            // ===== 添加到聊天框 =====
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // ===== 存储内容ID以便后续操作 =====
+            messageDiv.setAttribute('data-content-id', uniqueId);
+
+            return messageDiv;
+        }
+
+        /**
+         * 更新流式消息内容
+         * 功能：替换流式消息的内容
+         *
+         * @param {string} content - 新的内容
+         */
+        function updateStreamingMessage(content) {
+            if (currentStreamingMessage) {
+                const contentId = currentStreamingMessage.getAttribute('data-content-id');
+                const streamingContent = document.getElementById(contentId);
+                if (streamingContent) {
+                    streamingContent.innerHTML = content;
+                    scrollToBottom();
+                }
+            }
+        }
+
+        /**
+         * 追加内容到流式消息
+         * 功能：在现有内容后面追加新内容（核心流式显示逻辑）
+         *
+         * @param {string} content - 要追加的内容
+         */
+        function appendToStreamingMessage(content) {
+            if (currentStreamingMessage) {
+                const contentId = currentStreamingMessage.getAttribute('data-content-id');
+                const streamingContent = document.getElementById(contentId);
+                if (streamingContent) {
+                    // ===== 移除打字指示器 =====
+                    streamingContent.innerHTML = streamingContent.innerHTML.replace(
+                        '<span class="typing-indicator"></span>',
+                        ''
+                    );
+
+                    // ===== 追加新内容 =====
+                    streamingContent.innerHTML += content;
+                    scrollToBottom();
+                }
+            }
+        }
+
+        /**
+         * 完成流式传输
+         * 功能：清理流式传输状态，重置UI
+         */
+        function finishStreaming() {
+            if (currentStreamingMessage) {
+                // ===== 转换为普通AI消息 =====
+                currentStreamingMessage.className = 'message ai-message';
+
+                // ===== 清除临时属性 =====
+                currentStreamingMessage.id = '';
+                currentStreamingMessage.removeAttribute('data-content-id');
+
+                // ===== 移除流式信息 =====
+                const streamInfo = currentStreamingMessage.querySelector('.stream-info');
+                if (streamInfo) {
+                    streamInfo.remove();
+                }
+
+                // ===== 重置引用 =====
+                currentStreamingMessage = null;
+            }
+
+            // ===== 重置全局状态 =====
+            isProcessing = false;
+            setButtonDisabled(false);
+            document.getElementById('messageInput').focus();  // 重新聚焦输入框
+        }
+
+        /**
+         * 设置按钮状态
+         * 功能：控制发送按钮的可用性和显示文本
+         *
+         * @param {boolean} disabled - 是否禁用按钮
+         */
+        function setButtonDisabled(disabled) {
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = disabled;
+
+            // ===== 更新按钮文本 =====
+            if (disabled) {
+                sendBtn.textContent = '处理中...';
+            } else {
+                sendBtn.textContent = '🌊 发送消息';
+            }
+        }
+
+        /**
+         * 滚动到聊天框底部
+         * 功能：确保新消息始终可见
+         */
+        function scrollToBottom() {
+            const chatBox = document.getElementById('chatBox');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // ===== 页面初始化 =====
+        /**
+         * DOM加载完成事件处理
+         * 功能：页面加载后的初始化操作
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('messageInput').focus();  // 自动聚焦输入框
+            console.log('🎉 页面加载完成，流式传输聊天界面已就绪');
+        });
+    </script>
+</body>
+</html>
+
+<!--
+===== 整体架构总结 =====
+
+1. HTML结构层：
+   - 语义化标签：合理使用div、input、button等
+   - 响应式设计：viewport配置和弹性布局
+   - 可访问性：合理的标签层次和语义
+
+2. CSS样式层：
+   - 模块化设计：功能区域样式分离
+   - 响应式布局：适配不同屏幕尺寸
+   - 动画效果：打字指示器和状态指示器
+   - 用户体验：悬停效果和状态反馈
+
+3. JavaScript逻辑层：
+   - 状态管理：全局状态变量控制流程
+   - 事件处理：用户交互和流数据处理
+   - DOM操作：动态创建和更新消息元素
+   - 错误处理：网络错误和数据解析容错
+
+4. 流式传输核心：
+   - Fetch API：发起HTTP请求
+   - ReadableStream：处理响应数据流
+   - SSE协议：解析服务器发送的事件数据
+   - 实时更新：逐步显示AI生成内容
+
+===== 关键技术特点 =====
+
+1. 用户体验优化：
+   - 实时反馈：打字指示器和状态变化
+   - 防重复提交：状态控制避免并发问题
+   - 自动滚动：新消息始终可见
+   - 键盘支持：回车快捷发送
+
+2. 数据处理健壮性：
+   - 流式解析：支持不完整数据块
+   - 错误容错：JSON解析异常处理
+   - 状态同步：前后端状态一致性
+   - 内存管理：及时清理DOM引用
+
+3. 可扩展性设计：
+   - 模块化函数：功能单一职责明确
+   - 配置化样式：CSS变量易于定制
+   - 事件驱动：松耦合的交互设计
+   - 标准协议：遵循SSE和HTTP规范
+-->
